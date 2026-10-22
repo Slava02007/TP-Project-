@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АИС «Анализ продаж»</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Шапкa сайта (Header) -->
+    <header>
+        <div class="logo">АИС «Анализ продаж» (Вариант 12)</div>
+        <nav>
+            <button onclick="showScreen('home')" class="nav-btn">Главная</button>
+            <button onclick="showScreen('invoices')" class="nav-btn">Накладные и товары</button>
+            <button onclick="showScreen('clients')" class="nav-btn">Покупатели и карты</button>
+            <button onclick="showScreen('reports')" class="nav-btn">Отчеты руководству</button>
+            <button onclick="showScreen('error')" class="nav-btn error-link">Форма Ошибка</button>
+        </nav>
+    </header>
+
+    <!-- Основная область приложения (SPA контейнер) -->
+    <main>
+
+        <!-- Экран 1: Главная форма -->
+        <section id="home" class="screen active">
+            <h1>Добро пожаловать в систему «Анализ продаж»</h1>
+            <p>Выберите нужный раздел в меню сверху для работы с накладными, дисконтными картами или отчетами.</p>
+            <div class="card-container">
+                <div class="card" onclick="showScreen('invoices')">
+                    <h3>Учет товаров</h3>
+                    <p>Добавление накладных и новых товаров</p>
+                </div>
+                <div class="card" onclick="showScreen('clients')">
+                    <h3>Постоянные клиенты</h3>
+                    <p>Учет покупателей и накопительных скидок</p>
+                </div>
+                <div class="card" onclick="showScreen('reports')">
+                    <h3>Аналитика</h3>
+                    <p>Формирование отчетов для руководителя</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Экран 2: Накладные и товары (Добавление / Поиск / Редактирование) -->
+        <section id="invoices" class="screen">
+            <h2>Учет поступления товаров (Накладные)</h2>
+            
+            <div class="actions-bar">
+                <input type="text" placeholder="Поиск по номеру накладной или артикулу...">
+                <button class="btn">Найти</button>
+                <button class="btn primary" onclick="alert('Button adds item toп the list above (Добавить накладную)')">Добавить накладную</button>
+            </div>
+
+            <!-- Блок фильтрации и сортировки -->
+            <div class="filter-sort">
+                <label>Фильтр по виду товара:</label>
+                <select>
+                    <option>Все виды</option>
+                    <option>Одежда</option>
+                    <option>Обувь</option>
+                    <option>Кожгалантерея</option>
+                </select>
+                <button class="btn">Сортировать по дате</button>
+            </div>
+
+            <!-- Список элементов (замена таблицам через семантику) -->
+            <div class="list-container">
+                <article class="list-item">
+                    <div><strong>Накладная №145</strong> от 09.10.2026</div>
+                    <div>Позиций: 3 | Артикул: АТ-001 (Куртка кожаная)</div>
+                    <div class="item-actions">
+                        <button class="btn sm">Редактировать</button>
+                        <button class="btn sm danger">Удалить</button>
+                    </div>
+                </article>
+                <article class="list-item">
+                    <div><strong>Накладная №146</strong> от 10.10.2026</div>
+                    <div>Позиций: 1 | Артикул: КГ-045 (Сумка женская)</div>
+                    <div class="item-actions">
+                        <button class="btn sm">Редактировать</button>
+                        <button class="btn sm danger">Удалить</button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Экран 3: Покупатели и дисконтные карты -->
+        <section id="clients" class="screen">
+            <h2>Учет постоянных покупателей и дисконтных карт</h2>
+            
+            <div class="actions-bar">
+                <input type="text" placeholder="Поиск покупателя по ФИО или номеру карты...">
+                <button class="btn">Найти</button>
+                <button class="btn primary" onclick="alert('Button adds item to the list above (Зарегистрировать покупателя/карту)')">Выдать карту / Зарегистрировать</button>
+            </div>
+
+            <div class="list-container">
+                <article class="list-item">
+                    <div><strong>Иванов Иван Иванович</strong> (Телефон: +375291234567)</div>
+                    <div>Карта №12345 | Скидка: 3% (Накопления: 75.0 руб.)</div>
+                    <div class="item-actions">
+                        <button class="btn sm">Изменить</button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Экран 4: Отчеты руководству -->
+        <section id="reports" class="screen">
+            <h2>Отчеты для руководства</h2>
+            <div class="report-buttons">
+                <button class="btn primary">Отчет по сотрудникам и отработанным часам</button>
+                <button class="btn primary">Отчет по покупателям со скидкой 10%</button>
+                <button class="btn primary">Динамика продаж заданного товара (по месяцам)</button>
+                <button class="btn primary">Список покупателей-именинников на дату</button>
+            </div>
+            <div class="report-view">
+                <p><em>Выберите нужный отчет выше для отображения данных...</em></p>
+            </div>
+        </section>
+
+        <!-- Экран 5: Форма Ошибка -->
+        <section id="error" class="screen error-screen">
+            <h2>Ошибка 404</h2>
+            <p>Запрашиваемая страница не найдена или у вас нет прав доступа к данному разделу.</p>
+            <button class="btn primary" onclick="showScreen('home')">Вернуться на главную</button>
+        </section>
+
+    </main>
+
+    <!-- Нижняя информационная часть (Footer) -->
+    <footer>
+        <p>&copy; 2026 АИС «Анализ продаж». Разработано в рамках лабораторных работ по ТП.</p>
+    </footer>
+
+    <!-- Простой скрипт для переключения экранов SPA без перезагрузки -->
+    <script>
+        function showScreen(screenId) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
