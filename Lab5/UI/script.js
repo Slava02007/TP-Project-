@@ -1,4 +1,4 @@
-var user = 'Иванов Иван'; // или null, если пользователя нет
+var user = 'Иванов Иван'; 
 
 let ObjInf = [
     {
@@ -206,18 +206,64 @@ let ObjInf = [
 class SalesCollection {
     constructor(objs) {
         this._ObjIn = [];
-        this.addAll(objs);
+        this.restore(objs);
+    }
+
+    save() {
+        try {
+            localStorage.setItem('sales_objects', JSON.stringify(this._ObjIn));
+        } catch (e) {
+            console.error('Ошибка сохранения:', e);
+        }
+    }
+
+    restore(defaultObjs) {
+        try {
+            const savedData = localStorage.getItem('sales_objects');
+            if (savedData) {
+                const parsed = JSON.parse(savedData);
+                this._ObjIn = parsed.map(item => ({
+                    ...item,
+                    createdAt: new Date(item.createdAt)
+                }));
+            } else {
+                this._ObjIn = [];
+                if (Array.isArray(defaultObjs)) {
+                    defaultObjs.forEach(item => {
+                        if (this._validateObj(item)) {
+                            this._ObjIn.push({
+                                ...item,
+                                createdAt: new Date(item.createdAt)
+                            });
+                        }
+                    });
+                }
+                this.save();
+            }
+        } catch (e) {
+            console.error('Ошибка восстановления:', e);
+            this._ObjIn = [];
+            if (Array.isArray(defaultObjs)) {
+                defaultObjs.forEach(item => {
+                    if (this._validateObj(item)) {
+                        this._ObjIn.push({
+                            ...item,
+                            createdAt: new Date(item.createdAt)
+                        });
+                    }
+                });
+            }
+            this.save();
+        }
     }
 
     _validateObj(obj) {
         if (!obj || typeof obj !== 'object') return false;
-
         if (typeof obj.id !== 'string' || obj.id.trim() === '') return false;
         if (typeof obj.description !== 'string' || obj.description.length >= 200 || obj.description.trim() === '') return false;
         if (!(obj.createdAt instanceof Date) && isNaN(new Date(obj.createdAt))) return false;
         if (typeof obj.author !== 'string' || obj.author.trim() === '') return false;
         if (obj.photoLink !== undefined && typeof obj.photoLink !== 'string') return false;
-
         return true;
     }
 
@@ -234,11 +280,8 @@ class SalesCollection {
                     return item[key] === filterConfig[key];
                 });
             });
-            result.sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric: true}));
-        } else {
-            result.sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric: true}));
         }
-
+        result.sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric: true}));
         return result.slice(skip, skip + top);
     }
 
@@ -261,6 +304,7 @@ class SalesCollection {
         };
 
         this._ObjIn.push(newObj);
+        this.save();
         return true;
     }
 
@@ -283,6 +327,7 @@ class SalesCollection {
         if (!this._validateObj(updatedObj)) return false;
 
         this._ObjIn[targetIndex] = updatedObj;
+        this.save();
         return true;
     }
 
@@ -290,7 +335,12 @@ class SalesCollection {
         if (typeof id !== 'string') return false;
         const initialLength = this._ObjIn.length;
         this._ObjIn = this._ObjIn.filter(item => item.id !== id);
-        return this._ObjIn.length < initialLength;
+        
+        if (this._ObjIn.length < initialLength) {
+            this.save();
+            return true;
+        }
+        return false;
     }
 
     addAll(objs) {
@@ -307,6 +357,7 @@ class SalesCollection {
 
     clear() {
         this._ObjIn = [];
+        this.save();
     }
 }
 
@@ -339,8 +390,8 @@ class SalesView {
                     <small>Автор: ${item.author} | Дата: ${dateStr} | Артикул: ${item.article || 'Н/Д'}</small>
                 </div>
                 <div class="item-actions">
-                    ${canModify ? `<button class="btn sm" onclick="editObj('${item.id}', {description: prompt('Новое описание:')})">Редактировать</button>` : ''}
-                    ${canModify ? `<button class="btn sm danger" onclick="removeObj('${item.id}')">Удалить</button>` : ''}
+                    ${canModify ? `<button class="btn sm" data-id="${item.id}">Редактировать</button>` : ''}
+                    ${canModify ? `<button class="btn sm danger" data-id="${item.id}">Удалить</button>` : ''}
                 </div>
             `;
             this.container.appendChild(itemElement);
@@ -357,37 +408,210 @@ function updateUI() {
 
 function addObj(obj) {
     const success = salesModel.addObj(obj);
-    if (success) {
-        updateUI();
-        console.log('Объект успешно добавлен!');
-    } else {
-        console.error('Ошибка: объект не валиден или ID уже существует.');
-    }
+    if (success) { updateUI(); console.log('Добавлено!'); }
     return success;
 }
 
 function removeObj(id) {
     const success = salesModel.removeObj(id);
-    if (success) {
-        updateUI();
-        console.log(`Объект с id '${id}' удален.`);
-    } else {
-        console.error(`Не удалось удалить объект с id '${id}'.`);
-    }
+    if (success) { updateUI(); console.log('Удалено!'); }
     return success;
 }
 
 function editObj(id, obj) {
     const success = salesModel.editObj(id, obj);
-    if (success) {
-        updateUI();
-        console.log(`Объект с id '${id}' изменен.`);
-    } else {
-        console.error(`Ошибка при изменении объекта с id '${id}'.`);
-    }
+    if (success) { updateUI(); console.log('Изменено!'); }
     return success;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    updateUI();
-});
+(function() {
+    let state = {
+        skip: 0,
+        top: 10, 
+        currentFilter: {}
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initAuthUI();
+        initEventListeners();
+        renderList(true);
+    });
+
+    
+    function initAuthUI() {
+        const loginForm = document.getElementById('login-form');
+        const loginInput = document.getElementById('login-input');
+        const authContainer = document.getElementById('auth-container');
+        const userInfo = document.getElementById('user-info');
+        const usernameDisplay = document.getElementById('username-display');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        const savedUser = sessionStorage.getItem('current_user');
+        if (savedUser) {
+            user = savedUser;
+        }
+
+        if (user) {
+            if (loginForm) loginForm.style.display = 'none';
+            if (userInfo) userInfo.style.display = 'flex';
+            if (usernameDisplay) usernameDisplay.textContent = `👤 ${user}`;
+        } else {
+            if (loginForm) loginForm.style.display = 'flex';
+            if (userInfo) userInfo.style.display = 'none';
+        }
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = loginInput.value.trim();
+                if (name) {
+                    user = name;
+                    sessionStorage.setItem('current_user', user);
+                    initAuthUI();
+                    renderList();
+                    console.log('Успешный вход под именем:', user);
+                }
+            });
+        }
+
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                user = null;
+                sessionStorage.removeItem('current_user');
+                initAuthUI();
+                renderList();
+                console.log('Выход из системы');
+            });
+        }
+    }
+
+    function renderList(reset = false) {
+        if (reset) {
+            state.skip = 0;
+        }
+        const objs = salesModel.getObjs(state.skip, state.top, state.currentFilter);
+        invoicesView.render(objs, user);
+
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            const totalFiltered = salesModel.getObjs(0, 1000, state.currentFilter).length;
+            if (state.skip + state.top >= totalFiltered) {
+                loadMoreBtn.style.display = 'none';
+            } else {
+                loadMoreBtn.style.display = 'inline-block';
+            }
+        }
+    }
+
+    function initEventListeners() {
+        const addForm = document.getElementById('add-item-form');
+        if (addForm) {
+            addForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const id = document.getElementById('add-id').value.trim();
+                const article = document.getElementById('add-article').value.trim();
+                const productType = document.getElementById('add-type').value;
+                const description = document.getElementById('add-desc').value.trim();
+
+                const newObj = {
+                    id: id,
+                    description: description,
+                    createdAt: new Date(),
+                    author: user || 'Гость',
+                    photoLink: '',
+                    article: article,
+                    productType: productType,
+                    price: 100.0
+                };
+
+                const success = salesModel.addObj(newObj);
+                if (success) {
+                    alert('Объект успешно создан и сохранен в localStorage!');
+                    addForm.reset();
+                    renderList(true);
+                } else {
+                    alert('Ошибка: объект не прошел валидацию или такой ID уже существует!');
+                }
+            });
+        }
+
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+
+        if (searchBtn && searchInput) {
+            searchBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                if (query) {
+                    state.currentFilter.description = query;
+                } else {
+                    delete state.currentFilter.description;
+                }
+                renderList(true);
+            });
+        }
+
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', () => {
+                state.top += 10; 
+                renderList();
+            });
+        }
+
+        const container = document.getElementById('invoices-container');
+        if (container) {
+            container.addEventListener('click', (e) => {
+                if (e.target.classList.contains('danger')) {
+                    const id = e.target.getAttribute('data-id');
+                    if (id && confirm('Точно удалить этот элемент?')) {
+                        salesModel.removeObj(id);
+                        renderList();
+                    }
+                } else if (e.target.classList.contains('sm') && !e.target.classList.contains('danger')) {
+                    const id = e.target.getAttribute('data-id');
+                    if (id) {
+                        const newDesc = prompt('Введите новое описание (до 200 символов):');
+                        if (newDesc !== null) {
+                            salesModel.editObj(id, { description: newDesc });
+                            renderList();
+                        }
+                    }
+                }
+            });
+        }
+
+        const filterSelect = document.getElementById('filter-select');
+        if (filterSelect) {
+            filterSelect.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (val && val !== 'Все виды') {
+                    state.currentFilter.productType = val;
+                } else {
+                    delete state.currentFilter.productType;
+                }
+                renderList(true);
+            });
+        }
+    }
+
+    window.addObj = function(obj) {
+        const success = salesModel.addObj(obj);
+        if (success) { renderList(true); console.log('Добавлено!'); }
+        return success;
+    };
+
+    window.removeObj = function(id) {
+        const success = salesModel.removeObj(id);
+        if (success) { renderList(); console.log('Удалено!'); }
+        return success;
+    };
+
+    window.editObj = function(id, obj) {
+        const success = salesModel.editObj(id, obj);
+        if (success) { renderList(); console.log('Изменено!'); }
+        return success;
+    };
+
+})();
