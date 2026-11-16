@@ -8,7 +8,6 @@
 </head>
 <body>
 
-    <!-- Шапкa сайта (Header) -->
     <header>
         <div class="logo">АИС «Анализ продаж» (Вариант 12)</div>
         <nav>
@@ -20,10 +19,8 @@
         </nav>
     </header>
 
-    <!-- Основная область приложения (SPA контейнер) -->
     <main>
 
-        <!-- Экран 1: Главная форма -->
         <section id="home" class="screen active">
             <h1>Добро пожаловать в систему «Анализ продаж»</h1>
             <p>Выберите нужный раздел в меню сверху для работы с накладными, дисконтными картами или отчетами.</p>
@@ -43,17 +40,15 @@
             </div>
         </section>
 
-        <!-- Экран 2: Накладные и товары (Добавление / Поиск / Редактирование) -->
         <section id="invoices" class="screen">
             <h2>Учет поступления товаров (Накладные)</h2>
-            
+
             <div class="actions-bar">
                 <input type="text" placeholder="Поиск по номеру накладной или артикулу...">
                 <button class="btn">Найти</button>
                 <button class="btn primary" onclick="alert('Button adds item toп the list above (Добавить накладную)')">Добавить накладную</button>
             </div>
 
-            <!-- Блок фильтрации и сортировки -->
             <div class="filter-sort">
                 <label>Фильтр по виду товара:</label>
                 <select>
@@ -65,31 +60,12 @@
                 <button class="btn">Сортировать по дате</button>
             </div>
 
-            <!-- Список элементов (замена таблицам через семантику) -->
-            <div class="list-container">
-                <article class="list-item">
-                    <div><strong>Накладная №145</strong> от 09.10.2026</div>
-                    <div>Позиций: 3 | Артикул: АТ-001 (Куртка кожаная)</div>
-                    <div class="item-actions">
-                        <button class="btn sm">Редактировать</button>
-                        <button class="btn sm danger">Удалить</button>
-                    </div>
-                </article>
-                <article class="list-item">
-                    <div><strong>Накладная №146</strong> от 10.10.2026</div>
-                    <div>Позиций: 1 | Артикул: КГ-045 (Сумка женская)</div>
-                    <div class="item-actions">
-                        <button class="btn sm">Редактировать</button>
-                        <button class="btn sm danger">Удалить</button>
-                    </div>
-                </article>
-            </div>
+            <div class="list-container" id="invoices-container"></div>
         </section>
 
-        <!-- Экран 3: Покупатели и дисконтные карты -->
         <section id="clients" class="screen">
             <h2>Учет постоянных покупателей и дисконтных карт</h2>
-            
+
             <div class="actions-bar">
                 <input type="text" placeholder="Поиск покупателя по ФИО или номеру карты...">
                 <button class="btn">Найти</button>
@@ -107,7 +83,6 @@
             </div>
         </section>
 
-        <!-- Экран 4: Отчеты руководству -->
         <section id="reports" class="screen">
             <h2>Отчеты для руководства</h2>
             <div class="report-buttons">
@@ -121,7 +96,6 @@
             </div>
         </section>
 
-        <!-- Экран 5: Форма Ошибка -->
         <section id="error" class="screen error-screen">
             <h2>Ошибка 404</h2>
             <p>Запрашиваемая страница не найдена или у вас нет прав доступа к данному разделу.</p>
@@ -130,12 +104,10 @@
 
     </main>
 
-    <!-- Нижняя информационная часть (Footer) -->
     <footer>
         <p>&copy; 2026 АИС «Анализ продаж». Разработано в рамках лабораторных работ по ТП.</p>
     </footer>
 
-    <!-- Простой скрипт для переключения экранов SPA без перезагрузки -->
     <script>
         function showScreen(screenId) {
             const screens = document.querySelectorAll('.screen');
@@ -145,5 +117,6 @@
             document.getElementById(screenId).classList.add('active');
         }
     </script>
+    <script src="script.js"></script>
 </body>
 </html>
